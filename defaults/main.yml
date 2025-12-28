@@ -1,0 +1,33 @@
+---
+# How to install Keycloak on the system
+# Only supported option as of now it podman
+keycloak_install_method: 'podman'
+
+## General settings
+keycloak_init_username: 'admin'
+keycloak_init_password: 'OnePasswordToRuleThemAll'
+
+keycloak_service_hostname: 'keycloak.example.com'
+
+keycloak_ssl_certificate: '/etc/ssl/certs/server.crt'
+keycloak_ssl_certificate_key: '/etc/ssl/certs/server.key'
+keycloak_proxy_hsts: true
+
+## Podman installation
+# You want this unless you can't (e.g. when testing this role with Molecule)
+keycloak_podman_rootless: true
+keycloak_podman_subid_range_start: 100000
+# The image to use, the Red Hat supported version can be found at registry.redhat.io/rhbk/keycloak-rhel9
+keycloak_podman_image: 'quay.io/keycloak/keycloak:26.4.7-0'
+
+# Configure the podman container with Kerberos
+# Fill in the credentials of the user that can manage the Kerberos Principals of the host
+# Assumes that the domain is set in {{ ipaclient_domain }}
+keycloak_podman_kerberos: false
+keycloak_ipa_server: 'ipa.example.com'
+keycloak_ipa_username: 'admin'
+keycloak_ipa_password: 'password'
+
+# PostgreSQL settings
+keycloak_postgresql_podman_image: 'quay.io/fedora/postgresql-16:latest'
+keycloak_postgresql_podman_password: 'SomeRandomPassword'

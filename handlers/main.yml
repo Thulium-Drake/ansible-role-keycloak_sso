@@ -1,0 +1,22 @@
+---
+- name: 'Restart Podman Keycloak'
+  ansible.builtin.systemd:
+    name: "{{ keycloak_podman_service }}"
+    state: 'restarted'
+    enabled: true
+    scope: "{{ keycloak_podman_rootless | ternary('user', 'system') }}"
+    daemon_reload: true
+  loop:
+    - 'keycloak-backend-network'
+    - 'keycloak-db'
+    - 'keycloak'
+  loop_control:
+    loop_var: 'keycloak_podman_service'
+  become: "{{ keycloak_podman_rootless | ternary(true, omit) }}"
+  become_user: "{{ keycloak_podman_rootless | ternary('keycloak', omit) }}"
+
+- name: 'Restart apache'
+  ansible.builtin.service:
+    name: 'httpd'
+    state: 'restarted'
+    enabled: true

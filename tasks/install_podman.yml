@@ -1,0 +1,147 @@
+---
+- name: 'Install dependencies'
+  ansible.builtin.package:
+    name:
+      - 'podman'
+
+- name: 'Set up rootless Podman'
+  when: keycloak_podman_rootless
+  block:
+    - name: 'Ensure useraccount'
+      ansible.builtin.user:
+        name: 'keycloak'
+        comment: 'Keycloak service user'
+        shell: '/usr/sbin/nologin'
+        state: 'present'
+
+    - name: 'Ensure lingering for user'
+      ansible.builtin.command: 'loginctl enable-linger keycloak'
+      args:
+        creates: '/var/lib/systemd/linger/keycloak'
+
+    - name: 'Ensure subordinate IDs'
+      ansible.builtin.lineinfile:
+        path: "/etc/sub{{ file }}"
+        line: "keycloak:{{ keycloak_podman_subid_range_start }}:65536"
+        regexp: "^keycloak*"
+        state: 'present'
+      loop:
+        - 'uid'
+        - 'gid'
+      loop_control:
+        loop_var: 'file'
+
+- name: 'Configure Kerberos'
+  when: keycloak_podman_kerberos
+  block:
+    - name: 'Ensure Kerberos Principal'
+      freeipa.ansible_freeipa.ipaservice:
+        name: "HTTP/{{ keycloak_service_hostname }}@{{ ipaclient_domain | upper }}"
+        state: 'present'
+        ipaadmin_principal: "{{ keycloak_ipa_username }}"
+        ipaadmin_password: "{{ keycloak_ipa_password }}"
+      delegate_to: "{{ keycloak_ipa_server }}"
+
+    - name: 'Retrieve keytab'
+      ansible.builtin.shell: |
+        kinit -k
+        ipa-getkeytab -p HTTP/{{ keycloak_service_hostname }}@{{ ipaclient_domain | upper }} -k /etc/keycloak.keytab
+      args:
+        creates: '/etc/keycloak.keytab'
+
+- name: 'Ensure Podman services'
+  ansible.builtin.service:
+    name: "{{ service }}"
+    state: 'started'
+    enabled: true
+    scope: "{{ (keycloak_podman_rootless) | ternary('user', 'system', 'system') }}"
+  become: "{{ (keycloak_podman_rootless) | ternary(true, omit) }}"
+  become_user: "{{ (keycloak_podman_rootless) | ternary('keycloak', omit) }}"
+  loop:
+    - 'podman.socket'
+    - 'podman-auto-update.timer'
+  loop_control:
+    loop_var: 'service'
+
+- name: 'Deploy Keycloak'
+  become: true
+  become_user: "{{ keycloak_podman_rootless | ternary('keycloak', 'root') }}"
+  block:
+    - name: 'Ensure Podman backend network'
+      containers.podman.podman_network:
+        name: 'keycloak-backend'
+        state: 'quadlet'
+      notify: 'Restart Podman Keycloak'
+
+    - name: 'Ensure Podman volumes'
+      containers.podman.podman_volume:
+        name: "{{ keycloak_podman_volume }}"
+        state: 'quadlet'
+      notify: 'Restart Podman Keycloak'
+      loop:
+        - 'keycloak-db-data'
+        - 'keycloak-config'
+      loop_control:
+        loop_var: 'keycloak_podman_volume'
+
+    - name: 'Ensure PostGreSQL Podman container'
+      containers.podman.podman_container:
+        name: 'keycloak-db'
+        image: "{{ keycloak_postgresql_podman_image }}"
+        auto_remove: true
+        env:
+          POSTGRESQL_DATABASE: 'keycloak'
+          POSTGRESQL_USER: 'keycloak'
+          POSTGRESQL_PASSWORD: "{{ keycloak_postgresql_podman_password }}"
+        pull: 'newer'
+        quadlet_options:
+          - 'AutoUpdate=registry'
+          - |
+            [Install]
+            WantedBy=default.target
+          - |
+            [Service]
+            Restart=always
+        network:
+          - 'keycloak-backend'
+        volume:
+          - 'keycloak_db:/var/lib/pgsql/data:z'
+        state: 'quadlet'
+      notify: 'Restart Podman Keycloak'
+
+    - name: 'Ensure Keycloak Podman container'
+      containers.podman.podman_container:
+        name: 'keycloak'
+        image: "{{ keycloak_podman_image }}"
+        auto_remove: true
+        command:
+          - 'start'
+        env:
+          KC_BOOTSTRAP_ADMIN_USERNAME: "{{ keycloak_init_username }}"
+          KC_BOOTSTRAP_ADMIN_PASSWORD: "{{ keycloak_init_password }}"
+          KC_HEALTH_ENABLED: 'true'
+          KC_METRICS_ENABLED: 'false'
+          KC_HTTP_ENABLED: 'true'
+          KC_HOSTNAME: "{{ keycloak_service_hostname }}"
+          KC_DB: 'postgres'
+          KC_DB_URL: 'jdbc:postgresql://keycloak-db/keycloak'
+          KC_DB_USERNAME: 'keycloak'
+          KC_DB_PASSWORD: "{{ keycloak_postgresql_podman_password }}"
+          KC_PROXY_HEADERS: 'forwarded'
+        ports:
+          - '127.0.0.1:8080:8080'
+          - '127.0.0.1:9000:9000'
+        pull: 'newer'
+        quadlet_options:
+          - 'AutoUpdate=registry'
+          - |
+            [Install]
+            WantedBy=default.target
+          - |
+            [Service]
+            Restart=always
+        network:
+          - 'keycloak-backend'
+        volume: "{{ (keycloak_podman_kerberos) | ternary(keycloak_podman_volumes, omit) }}"
+        state: 'quadlet'
+      notify: 'Restart Podman Keycloak'

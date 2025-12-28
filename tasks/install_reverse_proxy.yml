@@ -1,0 +1,31 @@
+---
+- name: 'Install dependencies for reverse proxy'
+  ansible.builtin.package:
+    name: "{{ keycloak_apache_packages }}"
+    state: 'present'
+
+- name: 'Remove default Apache config'
+  ansible.builtin.copy:
+    content: '# MANAGED BY ANSIBLE, YOUR CHANGES WILL BE LOST!'
+    dest: "/etc/httpd/conf.d/{{ conf }}"
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  loop:
+    - '000-default.conf'
+    - 'autoindex.conf'
+    - 'ssl.conf'
+    - 'userdir.conf'
+    - 'welcome.conf'
+  loop_control:
+    loop_var: 'conf'
+  notify: 'Restart apache'
+
+- name: 'Ensure reverse proxy config'
+  ansible.builtin.template:
+    src: 'httpd_keycloak.conf.j2'
+    dest: '/etc/httpd/conf.d/keycloak.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  notify: 'Restart apache'

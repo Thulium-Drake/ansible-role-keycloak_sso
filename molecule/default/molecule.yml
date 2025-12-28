@@ -1,0 +1,26 @@
+---
+dependency:
+  name: 'galaxy'
+driver:
+  name: ${DRIVER_NAME:-podman}
+lint:
+  set -e
+  yamllint -c molecule/default/yamllint.yml .
+  ansible-lint molecule/default/converge.yml
+platforms:
+  - name: "keycloak.example.com"
+    image: "git.element-networks.nl/containers/${MOLECULE_DISTRO:-ubi9}-ansible:latest"
+    command: '/lib/systemd/systemd'
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+provisioner:
+  name: 'ansible'
+  config_options:
+    defaults:
+      roles_path: "$MOLECULE_PROJECT_DIRECTORY/.."
+  env:
+    ANSIBLE_VERBOSITY: 2
+verifier:
+  name: 'ansible'

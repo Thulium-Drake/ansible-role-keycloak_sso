@@ -1,0 +1,7 @@
+---
+keycloak_apache_logdir: '/var/log/httpd/'
+keycloak_apache_packages:
+  - 'httpd'
+  - 'mod_ssl'
+  - 'mod_proxy_html'
+  - 'python3-libsemanage'

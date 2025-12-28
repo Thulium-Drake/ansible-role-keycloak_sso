@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+# Keycloak reverse proxy
+<VirtualHost *:80>
+   ServerName {{ keycloak_service_hostname }}
+   Redirect permanent / https://{{ keycloak_service_hostname }}/
+</VirtualHost>
+
+<VirtualHost *:443>
+  ServerName {{ keycloak_service_hostname }}
+
+  SSLEngine on
+
+  SSLCertificateFile {{ keycloak_ssl_certificate }}
+  SSLCertificateKeyFile {{ keycloak_ssl_certificate_key }}
+
+  ProxyRequests Off
+  ProxyPreserveHost On
+  ProxyPass / http://localhost:8080/
+  ProxyPassReverse / http://localhost:8080/
+
+  RequestHeader set X-Forwarded-Proto "https"
+  {% if keycloak_proxy_hsts %}Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains" {% endif %}
+
+  ErrorLog {{ keycloak_apache_logdir }}/keycloak_error.log
+  CustomLog {{ keycloak_apache_logdir }}/keycloak_access.log common
+</VirtualHost>

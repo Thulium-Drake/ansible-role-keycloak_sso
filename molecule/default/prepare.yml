@@ -1,0 +1,38 @@
+---
+- name: 'Update package sources'
+  hosts: 'all'
+  tasks:
+    - name: 'Update APT cache'
+      ansible.builtin.apt:
+        update_cache: true
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: 'Update YUM cache'
+      ansible.builtin.dnf:
+        update_cache: true
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: 'Generate SSL key'
+      community.crypto.openssl_privatekey:
+        path: '/etc/ssl/certs/server.key'
+        size: 2048
+
+    - name: 'Generate SSL request'
+      community.crypto.openssl_csr:
+        path: '/etc/ssl/certs/server.csr'
+        privatekey_path: '/etc/ssl/certs/server.key'
+        common_name: 'repo.example.com'
+
+    - name: 'Generate SSL cert'
+      community.crypto.x509_certificate:
+        path: '/etc/ssl/certs/server.crt'
+        csr_path: '/etc/ssl/certs/server.csr'
+        privatekey_path: '/etc/ssl/certs/server.key'
+        provider: 'selfsigned'
+
+    - name: 'Copy cert to ca'
+      ansible.builtin.copy:
+        src: '/etc/ssl/certs/server.crt'
+        dest: '/etc/ssl/certs/ca.crt'
+        mode: '0664'
+        remote_src: true
