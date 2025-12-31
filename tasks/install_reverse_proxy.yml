@@ -29,3 +29,14 @@
     group: 'root'
     mode: '0644'
   notify: 'Restart apache'
+
+- name: 'Ensure SElinux booleans'
+  ansible.posix.seboolean:
+    name: "{{ sebool }}"
+    persistent: true
+    state: true
+  loop:
+    - 'httpd_can_network_connect'
+  loop_control:
+    loop_var: 'sebool'
+  when: ansible_facts['selinux']['status'] == 'enabled'

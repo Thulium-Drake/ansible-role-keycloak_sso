@@ -11,6 +11,7 @@
       ansible.builtin.user:
         name: 'keycloak'
         comment: 'Keycloak service user'
+        home: '/var/lib/keycloak'
         shell: '/usr/sbin/nologin'
         state: 'present'
 
@@ -46,8 +47,18 @@
       ansible.builtin.shell: |
         kinit -k
         ipa-getkeytab -p HTTP/{{ keycloak_service_hostname }}@{{ ipaclient_domain | upper }} -k /etc/keycloak.keytab
+        chown {{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}: /etc/keycloak.keytab
       args:
         creates: '/etc/keycloak.keytab'
+
+    - name: 'Copy krb5.conf for Keycloak usage'
+      ansible.builtin.copy:
+        src: '/etc/krb5.conf'
+        dest: '/etc/keycloak-krb5.conf'
+        owner: "{{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}"
+        group: "{{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}"
+        mode: '0644'
+        remote_src: true
 
 - name: 'Ensure Podman services'
   ansible.builtin.service:
@@ -127,7 +138,7 @@
           KC_DB_URL: 'jdbc:postgresql://keycloak-db/keycloak'
           KC_DB_USERNAME: 'keycloak'
           KC_DB_PASSWORD: "{{ keycloak_postgresql_podman_password }}"
-          KC_PROXY_HEADERS: 'forwarded'
+          KC_PROXY_HEADERS: 'xforwarded'
         ports:
           - '127.0.0.1:8080:8080'
           - '127.0.0.1:9000:9000'

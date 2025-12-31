@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
 # Keycloak reverse proxy
+Listen 443 https
 <VirtualHost *:80>
    ServerName {{ keycloak_service_hostname }}
    Redirect permanent / https://{{ keycloak_service_hostname }}/
