@@ -3,9 +3,12 @@
 # Only supported option as of now it podman
 keycloak_install_method: 'podman'
 
-## General settings
-keycloak_init_username: 'admin'
-keycloak_init_password: 'OnePasswordToRuleThemAll'
+###
+# Keycloak server configuration
+# These settings govern the Keycloak application itself
+###
+keycloak_admin_username: 'admin'
+keycloak_admin_password: 'OnePasswordToRuleThemAll'
 
 keycloak_service_hostname: 'keycloak.example.com'
 
@@ -31,3 +34,12 @@ keycloak_ipa_password: 'password'
 # PostgreSQL settings
 keycloak_postgresql_podman_image: 'quay.io/fedora/postgresql-16:latest'
 keycloak_postgresql_podman_password: 'SomeRandomPassword'
+
+###
+# Keycloak IdP configuration
+# These settings govern the realm and SSO applications served by Keycloak
+# This role utilizes `community.general.keycloak_*` modules, please see the module
+# documentation for more information
+###
+keycloak_realms: []
+keycloak_user_federations: []

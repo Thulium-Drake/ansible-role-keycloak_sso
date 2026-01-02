@@ -9,8 +9,11 @@
       paths:
         - 'vars'
 
-- name: 'Install Keycloak'
+- name: 'Ensure Keycloak installed'
   ansible.builtin.include_tasks: "tasks/install_{{ keycloak_install_method }}.yml"
 
-- name: 'Install Keycloak reverse proxy'
-  ansible.builtin.include_tasks: "tasks/install_reverse_proxy.yml"
+- name: 'Ensure Keycloak reverse proxy configured'
+  ansible.builtin.include_tasks: 'tasks/install_reverse_proxy.yml'
+
+- name: 'Configure realms'
+  ansible.builtin.include_tasks: 'tasks/realms_federation.yml'
