@@ -85,6 +85,7 @@
   loop: "{{ keycloak_realms }}"
   loop_control:
     loop_var: 'realm'
+    label: "{{ realm['name'] }}"
 
 - name: 'Ensure User Federation for realms'
   community.general.keycloak_user_federation:
@@ -102,3 +103,4 @@
   loop: "{{ keycloak_user_federations }}"
   loop_control:
     loop_var: 'federation'
+    label: "{{ federation['name'] }}"

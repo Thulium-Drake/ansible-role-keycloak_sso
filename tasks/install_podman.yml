@@ -32,6 +32,16 @@
       loop_control:
         loop_var: 'file'
 
+- name: 'Copy system CAcerts for Keycloak usage'
+  ansible.builtin.copy:
+    src: '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem'
+    dest: '/etc/keycloak-cacerts'
+    owner: "{{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}"
+    group: "{{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}"
+    mode: '0644'
+    remote_src: true
+  notify: 'Restart Podman Keycloak'
+
 - name: 'Configure Kerberos'
   when: keycloak_podman_kerberos
   block:
@@ -50,6 +60,7 @@
         chown {{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}: /etc/keycloak.keytab
       args:
         creates: '/etc/keycloak.keytab'
+      notify: 'Restart Podman Keycloak'
 
     - name: 'Copy krb5.conf for Keycloak usage'
       ansible.builtin.copy:
@@ -59,6 +70,7 @@
         group: "{{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}"
         mode: '0644'
         remote_src: true
+      notify: 'Restart Podman Keycloak'
 
 - name: 'Ensure Podman services'
   ansible.builtin.service:
@@ -153,6 +165,6 @@
             Restart=always
         network:
           - 'keycloak-backend'
-        volume: "{{ (keycloak_podman_kerberos) | ternary(keycloak_podman_volumes, omit) }}"
+        volume: "{{ keycloak_podman_volumes + (keycloak_podman_kerberos) | ternary(keycloak_podman_kerberos_volumes, omit) }}"
         state: 'quadlet'
       notify: 'Restart Podman Keycloak'

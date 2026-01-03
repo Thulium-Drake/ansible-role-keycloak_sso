@@ -15,5 +15,19 @@
 - name: 'Ensure Keycloak reverse proxy configured'
   ansible.builtin.include_tasks: 'tasks/install_reverse_proxy.yml'
 
+- name: 'Flush handlers'
+  ansible.builtin.meta: 'flush_handlers'
+
+- name: 'Wait for Keycloak to start'
+  ansible.builtin.uri:
+    url: 'http://localhost:9000/health'
+    return_content: true
+  register: 'keycloak_health'
+  until:
+    - keycloak_health['json']['status'] is defined
+    - keycloak_health['json']['status'] == 'UP'
+  retries: 60
+  delay: 2
+
 - name: 'Configure realms'
   ansible.builtin.include_tasks: 'tasks/realms_federation.yml'

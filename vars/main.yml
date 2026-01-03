@@ -1,5 +1,8 @@
 ---
-# These volumes mount Kerberos config files in the container when enabled
 keycloak_podman_volumes:
+  - '/etc/keycloak-cacerts:/opt/keycloak/conf/truststores/system-cacerts:ro,Z'
+
+# These volumes mount Kerberos config files in the container when enabled
+keycloak_podman_kerberos_volumes:
   - '/etc/keycloak-krb5.conf:/etc/krb5.conf:ro,Z'
   - '/etc/keycloak.keytab:/opt/keycloak/keycloak.keytab:ro,Z'

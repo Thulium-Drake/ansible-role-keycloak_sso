@@ -12,6 +12,7 @@
     - 'keycloak'
   loop_control:
     loop_var: 'keycloak_podman_service'
+    label: "{{ keycloak_podman_service }}"
   become: "{{ keycloak_podman_rootless | ternary(true, omit) }}"
   become_user: "{{ keycloak_podman_rootless | ternary('keycloak', omit) }}"
 
