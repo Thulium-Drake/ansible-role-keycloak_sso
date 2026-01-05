@@ -29,5 +29,8 @@
   retries: 60
   delay: 2
 
-- name: 'Configure realms'
+- name: 'Configure realms and user sources'
   ansible.builtin.include_tasks: 'tasks/realms_federation.yml'
+
+- name: 'Configure clients'
+  ansible.builtin.include_tasks: 'tasks/client_applications.yml'
