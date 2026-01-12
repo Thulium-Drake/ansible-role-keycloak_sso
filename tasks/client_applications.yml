@@ -46,7 +46,37 @@
     use_template_scope: "{{ client['use_template_scope'] | default(omit) }}"
     web_origins: "{{ client['web_origins'] | default(omit) }}"
     state: "{{ client['state'] | default('present') }}"
-  loop: "{{ keycloak_clients }}"
+
+- name: 'Ensure client roles'
+  community.general.keycloak_role:
+    auth_keycloak_url: 'http://localhost:8080'
+    auth_username: "{{ keycloak_admin_username }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    auth_realm: 'master'
+    name: "{{ client_role['name'] }}"
+    client_id: "{{ client['name'] }}"
+    attributes: "{{ client_role['attributes'] | default(omit) }}"
+    composite: "{{ client_role['composite'] | default(omit) }}"
+    composites: "{{ client_role['composites'] | default(omit) }}"
+    description: "Ansible Managed - {{ client_role['description'] | default('') }}"
+    realm: "{{ client['realm'] }}"
+    state: "{{ client_role['state'] | default('present') }}"
+  loop: "{{ client['roles'] | default([]) }}"
   loop_control:
-    loop_var: 'client'
-    label: "{{ client['name'] }}"
+    loop_var: 'client_role'
+
+- name: 'Ensure client role group mapping'
+  community.general.keycloak_client_rolemapping:
+    auth_keycloak_url: 'http://localhost:8080'
+    auth_username: "{{ keycloak_admin_username }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    auth_realm: 'master'
+    group_name: "{{ client_role['idm_group'] }}"
+    realm: "{{ client['realm'] }}"
+    client_id: "{{ client['name'] }}"
+    state: 'present'
+    roles:
+      - name: "{{ client_role['name'] }}"
+  loop: "{{ client['roles'] | default([]) }}"
+  loop_control:
+    loop_var: 'client_role'

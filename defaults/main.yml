@@ -42,4 +42,6 @@ keycloak_postgresql_podman_password: 'SomeRandomPassword'
 # documentation for more information
 ###
 keycloak_realms: []
+keycloak_client_scopes: []
 keycloak_user_federations: []
+keycloak_clients: []

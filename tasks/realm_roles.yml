@@ -1,0 +1,33 @@
+---
+- name: 'Ensure realm roles'
+  community.general.keycloak_role:
+    auth_keycloak_url: 'http://localhost:8080'
+    auth_username: "{{ keycloak_admin_username }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    auth_realm: 'master'
+    name: "{{ realm_role['name'] }}"
+    attributes: "{{ realm_role['attributes'] | default(omit) }}"
+    composite: "{{ realm_role['composite'] | default(omit) }}"
+    composites: "{{ realm_role['composites'] | default(omit) }}"
+    description: "Ansible Managed - {{ realm_role['description'] }}"
+    realm: "{{ realm_role['realm'] }}"
+    state: "{{ realm_role['state'] | default('present') }}"
+  loop: "{{ keycloak_realm_roles }}"
+  loop_control:
+    loop_var: 'realm_role'
+
+- name: 'Ensure realm role group mapping'
+  community.general.keycloak_realm_rolemapping:
+    auth_keycloak_url: 'http://localhost:8080'
+    auth_username: "{{ keycloak_admin_username }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    auth_realm: 'master'
+    group_name: "{{ realm_role['idm_group'] }}"
+    realm: "{{ realm_role['realm'] }}"
+    state: 'present'
+    roles:
+      - name: "{{ realm_role['name'] }}"
+  when: realm_role['group'] is defined
+  loop: "{{ keycloak_realm_roles }}"
+  loop_control:
+    loop_var: 'realm_role'

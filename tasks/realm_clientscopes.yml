@@ -1,0 +1,17 @@
+---
+- name: 'Ensure realm client scopes'
+  community.general.keycloak_clientscope:
+    auth_keycloak_url: 'http://localhost:8080'
+    auth_username: "{{ keycloak_admin_username }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    auth_realm: 'master'
+    attributes: "{{ clientscope['attributes'] | default(omit) }}"
+    description: "Ansible Managed - {{ clientscope['description'] | default(omit) }}"
+    name: "{{ clientscope['name'] }}"
+    protocol: "{{ clientscope['protocol'] | default(omit) }}"
+    protocol_mappers: "{{ clientscope['protocol_mappers'] | default(omit) }}"
+    realm: "{{ clientscope['realm'] }}"
+    state: 'present'
+  loop: "{{ keycloak_realm_clientscopes }}"
+  loop_control:
+    loop_var: 'clientscope'

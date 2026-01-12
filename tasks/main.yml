@@ -32,5 +32,14 @@
 - name: 'Configure realms and user sources'
   ansible.builtin.include_tasks: 'tasks/realms_federation.yml'
 
+- name: 'Configure realm roles'
+  ansible.builtin.include_tasks: 'tasks/realm_roles.yml'
+
+- name: 'Configure realm clientscopes'
+  ansible.builtin.include_tasks: 'tasks/realm_clientscopes.yml'
+
 - name: 'Configure clients'
   ansible.builtin.include_tasks: 'tasks/client_applications.yml'
+  loop: "{{ keycloak_clients }}"
+  loop_control:
+    loop_var: 'client'
