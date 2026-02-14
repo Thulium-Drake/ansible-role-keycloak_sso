@@ -27,7 +27,7 @@
     state: 'present'
     roles:
       - name: "{{ realm_role['name'] }}"
-  when: realm_role['group'] is defined
+  when: realm_role['idm_group'] is defined
   loop: "{{ keycloak_realm_roles }}"
   loop_control:
     loop_var: 'realm_role'
