@@ -58,6 +58,7 @@
         kinit -k
         ipa-getkeytab -p HTTP/{{ keycloak_service_hostname }}@{{ ipaclient_domain | upper }} -k /etc/keycloak.keytab
         chown {{ (keycloak_podman_rootless) | ternary('keycloak', 'root') }}: /etc/keycloak.keytab
+        chmod 0660 /etc/keycloak.keytab
       args:
         creates: '/etc/keycloak.keytab'
       notify: 'Restart Podman Keycloak'
