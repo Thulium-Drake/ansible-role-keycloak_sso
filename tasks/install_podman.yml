@@ -166,6 +166,6 @@
             Restart=always
         network:
           - 'keycloak-backend'
-        volume: "{{ keycloak_podman_volumes + (keycloak_podman_kerberos) | ternary(keycloak_podman_kerberos_volumes, omit) }}"
+        volume: "{{ keycloak_podman_volumes + (keycloak_podman_kerberos) | ternary(keycloak_podman_kerberos_volumes, []) }}"
         state: 'quadlet'
       notify: 'Restart Podman Keycloak'
