@@ -152,7 +152,7 @@
           KC_BOOTSTRAP_ADMIN_USERNAME: "{{ keycloak_admin_username }}"
           KC_BOOTSTRAP_ADMIN_PASSWORD: "{{ keycloak_admin_password }}"
           KC_HEALTH_ENABLED: 'true'
-          KC_METRICS_ENABLED: 'false'
+          KC_METRICS_ENABLED: 'true'
           KC_HTTP_ENABLED: 'true'
           KC_HOSTNAME: "{{ keycloak_service_hostname }}"
           KC_DB: 'postgres'
