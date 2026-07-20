@@ -95,12 +95,20 @@
       containers.podman.podman_network:
         name: 'keycloak-backend'
         state: 'quadlet'
+        quadlet_options:
+          - |
+            [Install]
+            WantedBy=default.target
       notify: 'Restart Podman Keycloak'
 
     - name: 'Ensure Podman volumes'
       containers.podman.podman_volume:
         name: "{{ keycloak_podman_volume }}"
         state: 'quadlet'
+        quadlet_options:
+          - |
+            [Install]
+            WantedBy=default.target
       notify: 'Restart Podman Keycloak'
       loop:
         - 'keycloak-db-data'
