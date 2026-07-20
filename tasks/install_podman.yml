@@ -137,7 +137,7 @@
         network:
           - 'keycloak-backend'
         volume:
-          - 'keycloak_db:/var/lib/pgsql/data:z'
+          - 'keycloak-db-data:/var/lib/pgsql/data:z'
         state: 'quadlet'
       notify: 'Restart Podman Keycloak'
 
