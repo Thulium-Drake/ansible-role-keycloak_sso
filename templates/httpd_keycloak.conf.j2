@@ -16,6 +16,10 @@ Listen 443 https
 
   ProxyRequests Off
   ProxyPreserveHost On
+  # Expose healthcheck endpoints
+  ProxyPass /health http://localhost:9000/health
+  ProxyPassReverse /health http://localhost:9000/health
+  # Expose main application
   ProxyPass / http://localhost:8080/
   ProxyPassReverse / http://localhost:8080/
 
